@@ -28,6 +28,7 @@ class User(AbstractUser):
     )
     is_activ = models.BooleanField(
         verbose_name='Аккаунт активен',
+        default=True,
     )
     password = models.CharField(
         verbose_name='Пароль',
