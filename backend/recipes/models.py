@@ -71,7 +71,7 @@ class Recipe(models.Model):
         Ingredient,
         related_name='recipes',
         verbose_name='Ингредиенты',
-        through='RecipeIngredients',
+        through='RecipeIngredient',
     )
     tag = models.ManyToManyField(
         Tag,
@@ -118,13 +118,13 @@ class Favorite(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='shopping_cart',
+        related_name='favorite',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='shopping_cart',
+        related_name='favorite',
         verbose_name='Рецепт',
     )
 
@@ -140,7 +140,7 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='ingredients',
+        related_name='ingredient',
         verbose_name='Рецепт',
     )
     ingredient = models.ForeignKey(
