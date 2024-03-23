@@ -37,7 +37,7 @@ class User(AbstractUser):
     )
 
     class Meta:
-        verbose_name = 'Пользователь'
+        verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
 
 
@@ -56,5 +56,5 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Подписка'
+        verbose_name = 'подписка'
         verbose_name_plural = 'Подписки'

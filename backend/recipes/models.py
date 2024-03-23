@@ -9,6 +9,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         'Ингредиент',
         max_length=256,
+        db_index=True,
     )
     unit = models.CharField(
         'Единица измерения',
@@ -16,11 +17,11 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Ингредиент'
+        verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return f'Для ингредиента: {self.name} единица измерения: {self.unit}.'
+        return f'Ингредиент: {self.name} единица измерения: {self.unit}.'
 
 
 class Tag(models.Model):
@@ -30,7 +31,7 @@ class Tag(models.Model):
         max_length=256,
     )
     color = models.CharField(
-        max_length=16,
+        max_length=7,
         verbose_name='Цвет'
     )
     slug = models.SlugField(
@@ -40,7 +41,7 @@ class Tag(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Тег'
+        verbose_name = 'тег'
         verbose_name_plural = 'Теги'
 
     def __str__(self):
@@ -83,7 +84,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Рецепт'
+        verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
@@ -106,7 +107,7 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Список покупок'
+        verbose_name = 'список покупок'
         verbose_name_plural = 'Списки покупок'
 
     def __str__(self):
@@ -129,7 +130,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Избранный рецепт'
+        verbose_name = 'избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self):
@@ -154,8 +155,8 @@ class RecipeIngredient(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Ингридиент'
-        verbose_name_plural = 'Количество ингридиентов'
+        verbose_name = 'ингредиент'
+        verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
         return f'{self.quantity} {self.ingredient}'
