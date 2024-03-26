@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from colorfield.fields import ColorField
+from django.core.validators import RegexValidator
 
 User = get_user_model()
 
@@ -19,6 +21,12 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_name_measurement_unit'
+            )
+        ]
 
     def __str__(self):
         return f'Ингредиент: {self.name} единица измерения: {self.unit}.'
@@ -27,12 +35,22 @@ class Ingredient(models.Model):
 class Tag(models.Model):
 
     name = models.CharField(
-        'Название рецепта',
+        'Название тега',
         max_length=256,
+        unique=True,
+        db_index=True,
     )
-    color = models.CharField(
+    color = ColorField(
+        verbose_name='HEX-код',
+        format='hex',
         max_length=7,
-        verbose_name='Цвет'
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+                message='Проверьте вводимый формат',
+            )
+        ],
     )
     slug = models.SlugField(
         max_length=50,
@@ -41,6 +59,7 @@ class Tag(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'тег'
         verbose_name_plural = 'Теги'
 
@@ -82,8 +101,14 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         verbose_name='Время приготовления в минутах',
     )
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True,
+        null=True,
+    )
 
     class Meta:
+        ordering = ('-pub_date',)
         verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
 
