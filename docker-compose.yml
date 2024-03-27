@@ -40,4 +40,4 @@ services:
       - db
       - backend
     ports:
-      - 8090:80
+      - 9090:80

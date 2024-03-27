@@ -30,7 +30,7 @@ services:
   gateway:
     image: practic73/foodgram_gateway
     ports:
-      - 8090:80
+      - 9090:80
     volumes:
       - static:/static
       - media:/media
