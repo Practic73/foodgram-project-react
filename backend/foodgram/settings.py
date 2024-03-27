@@ -14,11 +14,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', default='key')
 
 
-DEBUG = True
+DEBUG = False
 
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
