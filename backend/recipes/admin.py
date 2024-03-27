@@ -1,29 +1,29 @@
 from django.contrib import admin
 from .models import (Ingredient, Tag, Recipe,
-                     ShoppingCart, Favorite, RecipeIngredient)
+                     ShoppingCart, Favorite, RecipeIngredients)
 
 
 class IngredientInline(admin.TabularInline):
-    model = RecipeIngredient
+    model = RecipeIngredients
     extra = 3
     min_num = 1
 
 
 class RecipeTagsInLine(admin.TabularInline):
-    model = Recipe.tag.through
+    model = Recipe.tags.through
     extra = 1
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'get_favorites')
-    list_filter = ('author', 'name', 'tag')
-    search_fields = ('name', 'author', 'tag')
+    list_filter = ('author', 'name', 'tags')
+    search_fields = ('name', 'author', 'tags')
     inlines = (IngredientInline, RecipeTagsInLine)
     empty_value_display = 'Не задано'
 
     def get_favorites(self, obj):
-        return obj.favorite.count()
+        return obj.favorites.count()
     get_favorites.short_description = 'Добавлено в избранное'
 
 
@@ -45,15 +45,15 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'author')
-    list_filter = ('recipe', 'author')
+    list_display = ('recipe', 'user')
+    list_filter = ('recipe', 'user')
     search_fields = ('author', )
     empty_value_display = 'Не задано'
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('author', 'recipe')
-    list_filter = ('author', 'recipe')
+    list_display = ('user', 'recipe')
+    list_filter = ('user', 'recipe')
     search_fields = ('author', 'recipe')
     empty_value_display = 'Не задано'

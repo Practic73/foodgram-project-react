@@ -1,70 +1,58 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import F, Q, UniqueConstraint
 
 
 class User(AbstractUser):
+    """Кастомная модель пользователя."""
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username', 'first_name', 'last_name', )
-    first_name = models.CharField(
-        verbose_name='Имя',
-        max_length=256,
-    )
-    last_name = models.CharField(
-        max_length=256,
-        verbose_name='Фамилия',
-    )
     email = models.EmailField(
-        max_length=256,
-        verbose_name='email',
-        unique=True
+        unique=True,
+        verbose_name='Email'
     )
     username = models.CharField(
-        verbose_name='username',
-        max_length=256,
+        max_length=150,
         unique=True,
-        validators=(UnicodeUsernameValidator(), )
-    )
-
-    class Meta:
-        ordering = ('username', )
-        verbose_name = 'пользователь'
-        verbose_name_plural = 'Пользователи'
-
-    def __str__(self):
-        return self.username
-
-
-class Subscription(models.Model):
-    author = models.ForeignKey(
-        User,
-        verbose_name='Автор',
-        related_name='subscribers',
-        on_delete=models.CASCADE,
-    )
-    user = models.ForeignKey(
-        User,
-        verbose_name='Подписчики',
-        related_name='subscriptions',
-        on_delete=models.CASCADE,
-    )
-
-    class Meta:
-        ordering = ('-id', )
-        constraints = [
-            UniqueConstraint(
-                fields=('user', 'author'),
-                name='unique_follow'
-            ),
-            models.CheckConstraint(
-                check=~Q(user=F('author')),
-                name='no_self_follow'
-            )
+        verbose_name='Юзернейм',
+        validators=[
+            RegexValidator(regex=r'^[\w.@+-]+\Z', )
         ]
+    )
+    first_name = models.CharField(
+        max_length=150,
+        verbose_name='Имя',
+    )
+    last_name = models.CharField(
+        max_length=150,
+        verbose_name='Фамилия',
+    )
+    password = models.CharField(
+        max_length=150,
+    )
+
+
+class Follow(models.Model):
+    """Модель подписок."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='follower'
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='following'
+    )
+
+    class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
-    def __str__(self) -> str:
-        return f"{self.user} подписан на {self.author}"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_user_author'
+            )
+        ]
