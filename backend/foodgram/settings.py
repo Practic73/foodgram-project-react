@@ -36,13 +36,11 @@ INSTALLED_APPS = [
     'djoser',
     'django_filters',
     'import_export',
+    'api.apps.ApiConfig',
+    'recipes.apps.RecipesConfig',
+    'users.apps.UsersConfig',
 ]
 
-INSTALLED_APPS += [
-        'api.apps.ApiConfig',
-        'recipes.apps.RecipesConfig',
-        'users.apps.UsersConfig',
-]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
