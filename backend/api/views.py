@@ -68,7 +68,7 @@ class UserListViewSet(views.UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def subscribe(self, request, id):
-        """Подписка на автора, отписка."""
+        """Подписка или отписка на автора."""
 
         user = request.user
         author = get_object_or_404(User, id=id)
