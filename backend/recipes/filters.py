@@ -1,4 +1,4 @@
-from django_filters.rest_framework import FilterSet, filters
+from django_filters.rest_framework import FilterSet, filters, ModelMultipleChoiceFilter
 
 from .models import Ingredient, Recipe, Tag
 
@@ -22,9 +22,10 @@ class RecipeFilter(FilterSet):
     author = filters.CharFilter(
         field_name='author__id',
     )
-    tags = CharInFilter(
+    tags = ModelMultipleChoiceFilter(
+        queryset=Tag.objects.all(),
         field_name='tags__slug',
-        lookup_expr='in',
+        # lookup_expr='in',
     )
     is_favorited = filters.NumberFilter(
         method='filter_is_favorited',

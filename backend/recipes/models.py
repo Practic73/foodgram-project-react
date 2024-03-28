@@ -2,23 +2,23 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-from utils.constants import (
+""" from utils.constants import (
     MODELS_FIELDS_MAX_LENGTH, TAG_COLOR_MAX_LENGTH,
     TAG_NAME_MAX_LENGTH
-)
+) """
 
 
 class Tag(models.Model):
     """Модель тега."""
 
     name = models.CharField(
-        max_length=TAG_NAME_MAX_LENGTH,
+        max_length=200,
         verbose_name='Название тега'
     )
     color = models.CharField(
-        max_length=TAG_COLOR_MAX_LENGTH,
+        max_length=7,
         unique=True,
-        verbose_name='Цвет тега',
+        verbose_name='Цвет тега в HEX',
         validators=[
             RegexValidator(
                 regex=r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
@@ -32,7 +32,7 @@ class Tag(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Тег'
+        verbose_name = 'тег'
         verbose_name_plural = 'Теги'
         ordering = ('name',)
 
@@ -44,17 +44,17 @@ class Ingredient(models.Model):
     """Модель ингредиента."""
 
     name = models.CharField(
-        max_length=MODELS_FIELDS_MAX_LENGTH,
+        max_length=200,
         verbose_name='Название ингредиента',
     )
     measurement_unit = models.CharField(
-        max_length=MODELS_FIELDS_MAX_LENGTH,
-        verbose_name='Название меры',
+        max_length=200,
+        verbose_name='Единица измерения',
     )
 
     class Meta:
-        verbose_name = 'Продукт'
-        verbose_name_plural = 'Продукты'
+        verbose_name = 'ингредиент'
+        verbose_name_plural = 'Ингредиетны'
         ordering = ('name',)
         constraints = [
             models.UniqueConstraint(
@@ -71,7 +71,7 @@ class Recipe(models.Model):
     """Модель рецепта."""
 
     name = models.CharField(
-        max_length=MODELS_FIELDS_MAX_LENGTH,
+        max_length=200,
         unique=True,
         verbose_name='Название рецепта',
     )
@@ -94,7 +94,7 @@ class Recipe(models.Model):
     image = models.ImageField(
         verbose_name='Картинка',
         upload_to='images/',
-        help_text='Загрузка картинки к рецепту',
+        help_text='Загрузка картинки',
         blank=False
     )
     text = models.TextField(
@@ -110,7 +110,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Рецепт'
+        verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-pub_date',)
 
@@ -139,8 +139,8 @@ class RecipeIngredients(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Мера(таблица m2m рецепт-ингредиент)'
-        verbose_name_plural = 'Мера(таблица m2m рецепт-ингредиент)'
+        verbose_name = 'количество ингредиентов в рецепте'
+        verbose_name_plural = 'Количество ингредиентов в рецепте'
 
     def __str__(self):
         return self.recipe.name
@@ -160,9 +160,16 @@ class Favorite(models.Model):
         related_name='favorites'
     )
 
+    class Meta:
+        verbose_name = 'избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
+
+    def __str__(self):
+        return self.recipe.name
+
 
 class ShoppingCart(models.Model):
-    """Модель корзины."""
+    """Модель списка покупок."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -176,8 +183,8 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Корзина'
-        verbose_name_plural = 'Пользовательские корзины'
+        verbose_name = 'список покупок'
+        verbose_name_plural = 'Списки покупок'
 
     def __str__(self):
         return self.user.username
