@@ -179,9 +179,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeListSerializer(RecipeSerializer):
     """Сериализатор для списка рецептов."""
 
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
-
     class Meta:
         model = Recipe
         fields = (
@@ -196,28 +193,6 @@ class RecipeListSerializer(RecipeSerializer):
             'text',
             'cooking_time'
         )
-
-    def get_is_favorited(self, obj):
-        """Проверка наличия рецепта в избранном."""
-
-        request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
-        return Favorite.objects.filter(
-            user=request.user,
-            recipe=obj
-        ).exists()
-
-    def get_is_in_shopping_cart(self, obj):
-        """Проверка наличия рецепта в корзине."""
-
-        request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
-        return ShoppingCart.objects.filter(
-            user=request.user,
-            recipe=obj
-        ).exists()
 
 
 class RecipeDetailSerializer(serializers.ModelSerializer):
