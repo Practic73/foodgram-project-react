@@ -6,23 +6,21 @@ from djoser import views
 
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from api.pagination import LimitedPagination
 from api.permissions import IsAuthorOrReadOnly, ThisUserOrAdmin
 from api.serializers import (
     CustomUserSerializer, IngredientDetailSerializer, RecipeCreateSerializer,
     RecipeListSerializer, RecipeSerializer, RecipeSerializerShort,
-    SubscriptionListSerializer, TagSerializer
-)
+    SubscriptionListSerializer, TagSerializer)
 from recipes.filters import IngredientFilter, RecipeFilter, TagFilter
 from recipes.models import (
     Favorite, Ingredient, Recipe,
-    RecipeIngredients, ShoppingCart, Tag
-)
-from users.models import Follow, User
+    RecipeIngredients, ShoppingCart, Tag)
 from utils import views_utils, text_constants
+from users.models import Follow, User
 
 
 class UserListViewSet(views.UserViewSet):

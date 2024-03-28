@@ -2,11 +2,6 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-""" from utils.constants import (
-    MODELS_FIELDS_MAX_LENGTH, TAG_COLOR_MAX_LENGTH,
-    TAG_NAME_MAX_LENGTH
-) """
-
 
 class Tag(models.Model):
     """Модель тега."""

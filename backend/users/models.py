@@ -14,7 +14,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150,
         unique=True,
-        verbose_name='Юзернейм',
+        verbose_name='Логин',
         validators=[
             RegexValidator(regex=r'^[\w.@+-]+\Z', )
         ]
@@ -47,7 +47,7 @@ class Follow(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Подписка'
+        verbose_name = 'подписка'
         verbose_name_plural = 'Подписки'
 
         constraints = [

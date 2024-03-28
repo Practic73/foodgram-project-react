@@ -1,19 +1,7 @@
-from django_filters.rest_framework import FilterSet, filters, ModelMultipleChoiceFilter
+from django_filters.rest_framework import (FilterSet, filters,
+                                           ModelMultipleChoiceFilter)
 
 from .models import Ingredient, Recipe, Tag
-
-
-class CharInFilter(filters.BaseInFilter, filters.CharFilter):
-    """Кастомный фильтр.
-
-    Позволяет фильтровать по нескольким значениям.
-    BaseInFilter - для фильтрации по нескольким значениям(используя аргумент
-    lookup_expr='in').
-    CharFilter - для фильтрации по названию, а не id(используя аргумент
-    field_name='tags__slug').
-    """
-
-    pass
 
 
 class RecipeFilter(FilterSet):
@@ -26,7 +14,6 @@ class RecipeFilter(FilterSet):
         to_field_name='slug',
         field_name='tags__slug',
         queryset=Tag.objects.all(),
-        # lookup_expr='in',
     )
     is_favorited = filters.NumberFilter(
         method='filter_is_favorited',
