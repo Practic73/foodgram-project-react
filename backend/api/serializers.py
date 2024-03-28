@@ -6,8 +6,7 @@ from rest_framework import serializers
 
 from recipes.models import (
     Favorite, Ingredient, Recipe,
-    RecipeIngredients, ShoppingCart, Tag
-)
+    RecipeIngredients, ShoppingCart, Tag)
 from users.models import Follow, User
 
 
