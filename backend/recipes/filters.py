@@ -23,8 +23,9 @@ class RecipeFilter(FilterSet):
         field_name='author__id',
     )
     tags = ModelMultipleChoiceFilter(
-        queryset=Tag.objects.all(),
+        to_field_name='slug',
         field_name='tags__slug',
+        queryset=Tag.objects.all(),
         # lookup_expr='in',
     )
     is_favorited = filters.NumberFilter(
