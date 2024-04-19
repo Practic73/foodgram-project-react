@@ -61,33 +61,9 @@ class Base64ImageField(serializers.ImageField):
             ext = format.split('/')[-1]
             data = ContentFile(
                 base64.b64decode(imgstr),
-                name='temp.' + ext
+                name='temp.' + ext,
             )
         return super().to_internal_value(data)
-
-
-class RecipeDetailSerializer(serializers.ModelSerializer):
-
-    tags = TagSerializer(many=True)
-    ingredients = IngredientSerializer(
-        many=True,
-        source='recipe_ingredients'
-    )
-    author = CustomUserSerializer()
-    image = Base64ImageField(required=False, allow_null=True)
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'tag',
-            'author',
-            'ingredients',
-            'name',
-            'image',
-            'text',
-            'cooking_time'
-        )
 
 
 class IngredientToRecipeSerializer(serializers.ModelSerializer):
@@ -115,6 +91,9 @@ class IngredientToRecipeSerializer(serializers.ModelSerializer):
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
 
+    ingredients = IngredientSerializer(many=True)
+    tag = TagSerializer(many=True)
+
     tag = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True)
@@ -132,26 +111,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time',
             )
 
-    @staticmethod
-    def create_ingredients(recipe, ingredients):
-        ingredient_liist = []
-        for ingredient_data in ingredients:
-            ingredient_obj = Ingredient.objects.get(
-                id=ingredient_data.get('ingredients')['id'])
-            ingredient_liist.append(
-                AmountIngredient(
-                    ingredient=ingredient_obj,
-                    amount=ingredient_data.get('amount'),
-                    recipe=recipe,
-                )
-            )
-        AmountIngredient.objects.bulk_create(ingredient_liist)
 
-    def create(self, validated_data):
-        request = self.context.get('request', None)
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
-        recipe.tag.set(tags)
-        self.create_ingredients(recipe, ingredients)
-        return recipe
+class RecipeDetailSerializer(serializers.ModelSerializer):
+
+    tag = TagSerializer(many=True)
+    ingredients = IngredientToRecipeSerializer(
+        many=True,
+        source='recipe_ingredients'
+    )
+    author = CustomUserSerializer()
+    image = Base64ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'tag',
+            'author',
+            'ingredients',
+            'name',
+            'image',
+            'text',
+            'cooking_time'
+        )
