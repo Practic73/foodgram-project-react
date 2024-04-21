@@ -1,30 +1,23 @@
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser import views
 
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
 
-from api.pagination import LimitedPagination
-from api.permissions import IsAuthorOrReadOnly, ThisUserOrAdmin
+from api.paginations import CustomPagePagination
+from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
-    CustomUserSerializer, IngredientDetailSerializer, RecipeCreateSerializer,
-    RecipeListSerializer, RecipeSerializer, RecipeSerializerShort,
-    SubscriptionListSerializer, TagSerializer)
+    IngredientDetailSerializer, RecipeCreateSerializer, RecipeListSerializer,
+    RecipeSerializer, RecipeSerializerShort, TagSerializer)
 from recipes.filters import IngredientFilter, RecipeFilter, TagFilter
 from recipes.models import (
     Favorite, Ingredient, Recipe,
     RecipeIngredients, ShoppingCart, Tag)
-from utils import views_utils, text_constants
-from users.models import Follow, User
+from utils import views_utils
 
 
-class UserListViewSet(views.UserViewSet):
-    """Представление пользователей."""
+""" class UserListViewSet(views.UserViewSet):
 
     queryset = User.objects.all()
     permission_classes = (
@@ -48,7 +41,6 @@ class UserListViewSet(views.UserViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def subscriptions(self, request):
-        """Получение подписок и сериализация."""
 
         authors = User.objects.filter(following__user=request.user)
         paginator = PageNumberPagination()
@@ -68,7 +60,6 @@ class UserListViewSet(views.UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def subscribe(self, request, id):
-        """Подписка или отписка на автора."""
 
         user = request.user
         author = get_object_or_404(User, id=id)
@@ -109,7 +100,6 @@ class UserListViewSet(views.UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def me(self, request):
-        """Представление авторизованного пользователя."""
 
         if request.method == 'GET':
             serializer = CustomUserSerializer(
@@ -123,7 +113,7 @@ class UserListViewSet(views.UserViewSet):
             partial=True
         )
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK) """
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -156,7 +146,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    pagination_class = LimitedPagination
+    pagination_class = CustomPagePagination
 
     def get_serializer_class(self):
         """Выбор сериализатора рецептов."""

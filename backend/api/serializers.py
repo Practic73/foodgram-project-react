@@ -1,27 +1,24 @@
 import base64
 
 from django.core.files.base import ContentFile
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
     Favorite, Ingredient, Recipe,
     RecipeIngredients, ShoppingCart, Tag)
-from users.models import Follow, User
+from users.serializers import CustomUserSerializer
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
-    """Сериализатор создания пользователя."""
+""" class CustomUserCreateSerializer(UserCreateSerializer):
 
     class Meta:
         model = User
         fields = (
             'email', 'username', 'first_name',
-            'last_name', 'password')
+            'last_name', 'password') """
 
 
-class CustomUserSerializer(UserSerializer):
-    """Сериализатор пользователя."""
+""" class CustomUserSerializer(UserSerializer):
 
     is_subscribed = serializers.SerializerMethodField()
 
@@ -37,7 +34,6 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        """Проверка наличия подписки."""
 
         request = self.context.get('request')
         if request.user.is_anonymous:
@@ -45,7 +41,7 @@ class CustomUserSerializer(UserSerializer):
         return Follow.objects.filter(
             user=request.user,
             author=obj
-        ).exists()
+        ).exists() """
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -348,8 +344,7 @@ class RecipeSerializerShort(serializers.ModelSerializer):
         )
 
 
-class SubscriptionListSerializer(CustomUserSerializer):
-    """Сериализатор для подписок."""
+""" class SubscriptionListSerializer(CustomUserSerializer):
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -361,7 +356,6 @@ class SubscriptionListSerializer(CustomUserSerializer):
         )
 
     def get_recipes(self, obj):
-        """Получение рецептов."""
 
         queryset = Recipe.objects.filter(author=obj)
         request = self.context.get('request')
@@ -372,6 +366,5 @@ class SubscriptionListSerializer(CustomUserSerializer):
         return RecipeSerializerShort(queryset, many=True).data
 
     def get_recipes_count(self, obj):
-        """Получение количества рецептов."""
 
-        return Recipe.objects.filter(author_id=obj.id).count()
+        return Recipe.objects.filter(author_id=obj.id).count() """
