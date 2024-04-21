@@ -1,23 +1,30 @@
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser import views
 
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from api.paginations import CustomPagePagination
-from api.permissions import IsAuthorOrReadOnly
+from api.permissions import IsAuthorOrReadOnly, ThisUserOrAdmin
 from api.serializers import (
-    IngredientDetailSerializer, RecipeCreateSerializer, RecipeListSerializer,
-    RecipeSerializer, RecipeSerializerShort, TagSerializer)
+    CustomUserSerializer, IngredientDetailSerializer, RecipeCreateSerializer,
+    RecipeListSerializer, RecipeSerializer, RecipeSerializerShort,
+    SubscriptionListSerializer, TagSerializer)
 from recipes.filters import IngredientFilter, RecipeFilter, TagFilter
 from recipes.models import (
     Favorite, Ingredient, Recipe,
     RecipeIngredients, ShoppingCart, Tag)
 from utils import views_utils
+from users.models import Follow, User
 
 
-""" class UserListViewSet(views.UserViewSet):
+class UserListViewSet(views.UserViewSet):
+    """Представление пользователей."""
 
     queryset = User.objects.all()
     permission_classes = (
@@ -36,30 +43,29 @@ from utils import views_utils
 
     @action(
         detail=False,
-        url_path='subscriptions',
-        methods=('get',),
+        methods=('GET',),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def subscriptions(self, request):
+        """Получение подписок и сериализация."""
 
-        authors = User.objects.filter(following__user=request.user)
-        paginator = PageNumberPagination()
-        paginator.page_size = 6
-        result_page = paginator.paginate_queryset(authors, request)
-        serializer = SubscriptionListSerializer(
-            result_page,
-            many=True,
-            context={'request': request}
-        )
-        return paginator.get_paginated_response(serializer.data)
+        author = request.user
+        limit = request.query_params.get('limit')
+        if limit:
+            subscriptions = Follow.objects.filter(author=author)[:int(limit)]
+        else:
+            subscriptions = Follow.objects.filter(author=author)
+        page = self.paginate_queryset(subscriptions)
+        serializer = SubscriptionListSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
-        methods=('post', 'delete'),
-        url_path='subscribe',
+        methods=('POST', 'DELETE'),
         permission_classes=(permissions.IsAuthenticated,)
     )
     def subscribe(self, request, id):
+        """Подписка или отписка на автора."""
 
         user = request.user
         author = get_object_or_404(User, id=id)
@@ -78,20 +84,14 @@ from utils import views_utils
                     serializer.data,
                     status=status.HTTP_201_CREATED
                 )
-            return Response(
-                {'errors': text_constants.SUBSCRIPTION_ERROR},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         if user != author and Follow.objects.filter(
             user=user,
             author=author
         ).exists():
             Follow.objects.filter(user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': text_constants.NO_ENTRY},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -100,6 +100,7 @@ from utils import views_utils
         permission_classes=(permissions.IsAuthenticated,)
     )
     def me(self, request):
+        """Представление авторизованного пользователя."""
 
         if request.method == 'GET':
             serializer = CustomUserSerializer(
@@ -113,7 +114,7 @@ from utils import views_utils
             partial=True
         )
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK) """
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

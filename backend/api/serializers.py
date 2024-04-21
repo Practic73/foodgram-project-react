@@ -1,24 +1,28 @@
 import base64
 
+from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
     Favorite, Ingredient, Recipe,
     RecipeIngredients, ShoppingCart, Tag)
-from users.serializers import CustomUserSerializer
+from users.models import Follow, User
 
 
-""" class CustomUserCreateSerializer(UserCreateSerializer):
+class CustomUserCreateSerializer(UserCreateSerializer):
+    """Сериализатор создания пользователя."""
 
     class Meta:
         model = User
         fields = (
-            'email', 'username', 'first_name',
-            'last_name', 'password') """
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'password')
 
 
-""" class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(UserSerializer):
+    """Сериализатор пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
 
@@ -34,6 +38,7 @@ from users.serializers import CustomUserSerializer
         )
 
     def get_is_subscribed(self, obj):
+        """Проверка наличия подписки."""
 
         request = self.context.get('request')
         if request.user.is_anonymous:
@@ -41,7 +46,7 @@ from users.serializers import CustomUserSerializer
         return Follow.objects.filter(
             user=request.user,
             author=obj
-        ).exists() """
+        ).exists()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -235,7 +240,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def create_ingredients(self, ingredient_data, recipe):
         """Получение ингредиента, создание связи, возврат ингредиента."""
 
-        ingredient = Ingredient.objects.get(pk=ingredient_data['id'])
+        ingredient = get_object_or_404(Ingredient, id=ingredient_data['id'])
         RecipeIngredients.objects.create(
             recipe=recipe,
             ingredient=ingredient,
@@ -344,7 +349,8 @@ class RecipeSerializerShort(serializers.ModelSerializer):
         )
 
 
-""" class SubscriptionListSerializer(CustomUserSerializer):
+class SubscriptionListSerializer(CustomUserSerializer):
+    """Сериализатор для подписок."""
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -356,6 +362,7 @@ class RecipeSerializerShort(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
+        """Получение рецептов."""
 
         queryset = Recipe.objects.filter(author=obj)
         request = self.context.get('request')
@@ -366,5 +373,6 @@ class RecipeSerializerShort(serializers.ModelSerializer):
         return RecipeSerializerShort(queryset, many=True).data
 
     def get_recipes_count(self, obj):
+        """Получение количества рецептов."""
 
-        return Recipe.objects.filter(author_id=obj.id).count() """
+        return Recipe.objects.filter(author_id=obj.id).count()
