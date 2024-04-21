@@ -12,14 +12,30 @@ from api.paginations import CustomPagePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CustomUserSerializer, IngredientDetailSerializer, RecipeCreateSerializer,
-    RecipeListSerializer, RecipeSerializer, RecipeSerializerShort,
-    SubscriptionListSerializer, TagSerializer)
+    RecipeListSerializer, RecipeSerializer, SubscriptionListSerializer,
+    TagSerializer)
+from api.service import add_recipe, delete_recipe
 from recipes.filters import IngredientFilter, RecipeFilter, TagFilter
 from recipes.models import (
     Favorite, Ingredient, Recipe,
     RecipeIngredients, ShoppingCart, Tag)
-from utils import views_utils
 from users.models import Follow, User
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    pagination_class = None
+    filterset_class = TagFilter
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientDetailSerializer
+    search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
+    pagination_class = None
 
 
 class UserListViewSet(views.UserViewSet):
@@ -105,22 +121,6 @@ class UserListViewSet(views.UserViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    pagination_class = None
-    filterset_class = TagFilter
-
-
-class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientDetailSerializer
-    search_fields = ('name',)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = IngredientFilter
-    pagination_class = None
-
-
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (
@@ -144,13 +144,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def favorite(self, request, pk):
-        return views_utils.favorite(
+        return add_recipe(
             self,
             request,
             pk,
             Favorite,
-            Recipe,
-            RecipeSerializerShort
+        ) if request.method == 'POST' else delete_recipe(
+            self,
+            request,
+            pk,
+            Favorite,
         )
 
     @action(
@@ -159,13 +162,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def shopping_cart(self, request, pk):
-        return views_utils.favorite(
+        return add_recipe(
             self,
             request,
             pk,
             ShoppingCart,
-            Recipe,
-            RecipeSerializerShort
+        ) if request.method == 'POST' else delete_recipe(
+            self,
+            request,
+            pk,
+            ShoppingCart,
         )
 
     @action(

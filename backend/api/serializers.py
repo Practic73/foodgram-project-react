@@ -12,7 +12,7 @@ from users.models import Follow, User
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
-    """Сериализатор создания пользователя."""
+    """Сериализатор для регистрации пользователя."""
 
     class Meta:
         model = User
