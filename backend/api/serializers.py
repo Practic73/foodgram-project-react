@@ -6,9 +6,9 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    Favorite, Ingredient, Recipe,
-    RecipeIngredients, ShoppingCart, Tag)
-from users.models import Follow, User
+    AmountIngredient, Favorite, Ingredient, Recipe,
+    ShoppingCart, Tag)
+from users.models import Subscribtion, User
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -43,7 +43,7 @@ class CustomUserSerializer(UserSerializer):
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
-        return Follow.objects.filter(
+        return Subscribtion.objects.filter(
             user=request.user,
             author=obj
         ).exists()
@@ -70,7 +70,7 @@ class IngredientIDAmountSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = RecipeIngredients
+        model = AmountIngredient
         fields = (
             'id',
             'amount'
@@ -90,7 +90,7 @@ class IngredientSerializer(IngredientIDAmountSerializer):
     )
 
     class Meta:
-        model = RecipeIngredients
+        model = AmountIngredient
         fields = (
             'id',
             'name',
@@ -241,7 +241,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """Получение ингредиента, создание связи, возврат ингредиента."""
 
         ingredient = get_object_or_404(Ingredient, id=ingredient_data['id'])
-        RecipeIngredients.objects.create(
+        AmountIngredient.objects.create(
             recipe=recipe,
             ingredient=ingredient,
             amount=ingredient_data['amount']

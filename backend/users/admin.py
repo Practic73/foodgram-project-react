@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 
-from .models import User, Follow
+from .models import Subscribtion, User
 
 
 @admin.register(User)
@@ -12,7 +12,7 @@ class UserAdmin(admin.ModelAdmin):
     empty_value_display = 'Не задано'
 
 
-@admin.register(Follow)
+@admin.register(Subscribtion)
 class FollowAdmin(admin.ModelAdmin):
     list_display = ('author', 'user')
     list_filter = ('author', 'user')

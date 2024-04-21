@@ -7,8 +7,8 @@ from .views import (TagViewSet, RecipeViewSet,
 app_name = 'api'
 
 router = SimpleRouter()
-router.register('ingredients', IngredientViewSet, basename='ingredients')
 router.register('tags', TagViewSet, basename='tags')
+router.register('ingredients', IngredientViewSet, basename='ingredients')
 router.register('recipes', RecipeViewSet, basename='recipes')
 router.register('users', UserListViewSet, basename='users')
 

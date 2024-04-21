@@ -17,9 +17,9 @@ from api.serializers import (
 from api.service import add_recipe, delete_recipe
 from recipes.filters import IngredientFilter, RecipeFilter, TagFilter
 from recipes.models import (
-    Favorite, Ingredient, Recipe,
-    RecipeIngredients, ShoppingCart, Tag)
-from users.models import Follow, User
+    AmountIngredient, Favorite, Ingredient, Recipe,
+    ShoppingCart, Tag)
+from users.models import Subscribtion, User
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -80,9 +80,10 @@ class UserListViewSet(views.UserViewSet):
         author = request.user
         limit = request.query_params.get('limit')
         if limit:
-            subscriptions = Follow.objects.filter(author=author)[:int(limit)]
+            subscriptions = Subscribtion.objects.filter(
+                author=author)[:int(limit)]
         else:
-            subscriptions = Follow.objects.filter(author=author)
+            subscriptions = Subscribtion.objects.filter(author=author)
         page = self.paginate_queryset(subscriptions)
         serializer = SubscriptionListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
@@ -95,7 +96,7 @@ class UserListViewSet(views.UserViewSet):
     def subscribe(self, request, id):
         user = request.user
         author = get_object_or_404(User, id=id)
-        current_subscriptions = Follow.objects.filter(
+        current_subscriptions = Subscribtion.objects.filter(
             user=user, author=author)
         if user == author:
             content = {'error': 'подписываться на самого себя нельзя.'}
@@ -104,7 +105,7 @@ class UserListViewSet(views.UserViewSet):
             if current_subscriptions.exists():
                 content = {'error': 'такая подписка уже существует.'}
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
-            Follow.objects.create(user=request.user, author=author)
+            Subscribtion.objects.create(user=request.user, author=author)
             follows = get_object_or_404(User, id=id)
             serializer = SubscriptionListSerializer(
                 follows,
@@ -180,11 +181,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
+        user = request.user
         shopping_cart = ShoppingCart.objects.filter(
-            user=request.user
+            user=user
         ).values_list('recipe_id', flat=True)
 
-        ingredients = RecipeIngredients.objects.filter(
+        ingredients = AmountIngredient.objects.filter(
             recipe_id__in=shopping_cart
         ).values(
             'ingredient__name',

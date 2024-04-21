@@ -71,7 +71,7 @@ python manage.py runserver
 
 
 ## Проект доступен
-- Проект запущен и доступен по https://9foodgram9.sytes.net/
-- Админ панель https://9foodgram9.sytes.net/admin/
+- Проект запущен и доступен по https://9foodgram99.ddns.net/
+- Админ панель https://9foodgram99.ddns.net/admin/
 - Админ логин: admin
 - Админ пароль: 123
