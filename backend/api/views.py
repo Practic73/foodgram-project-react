@@ -6,11 +6,10 @@ from djoser import views
 
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.paginations import CustomPagePagination
-from api.permissions import IsAuthorOrReadOnly, ThisUserOrAdmin
+from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CustomUserSerializer, IngredientDetailSerializer, RecipeCreateSerializer,
     RecipeListSerializer, RecipeSerializer, RecipeSerializerShort,
@@ -24,13 +23,8 @@ from users.models import Follow, User
 
 
 class UserListViewSet(views.UserViewSet):
-    """Представление пользователей."""
-
     queryset = User.objects.all()
-    permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
-        ThisUserOrAdmin
-    )
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('username', 'email')
 
@@ -43,12 +37,30 @@ class UserListViewSet(views.UserViewSet):
 
     @action(
         detail=False,
+        methods=('GET', 'PATCH'),
+        permission_classes=(permissions.IsAuthenticated,)
+    )
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = CustomUserSerializer(
+                request.user,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
         methods=('GET',),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def subscriptions(self, request):
-        """Получение подписок и сериализация."""
-
         author = request.user
         limit = request.query_params.get('limit')
         if limit:
@@ -65,61 +77,35 @@ class UserListViewSet(views.UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def subscribe(self, request, id):
-        """Подписка или отписка на автора."""
-
         user = request.user
         author = get_object_or_404(User, id=id)
+        current_subscriptions = Follow.objects.filter(
+            user=user, author=author)
+        if user == author:
+            content = {'error': 'подписываться на самого себя нельзя.'}
+            return Response(content, status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'POST':
-            if user != author and not Follow.objects.filter(
-                user=user,
-                author=author
-            ).exists():
-                Follow.objects.create(user=request.user, author=author)
-                follows = User.objects.filter(id=id).first()
-                serializer = SubscriptionListSerializer(
-                    follows,
-                    context={'request': request}
-                )
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        if user != author and Follow.objects.filter(
-            user=user,
-            author=author
-        ).exists():
-            Follow.objects.filter(user=user, author=author).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    @action(
-        detail=False,
-        url_path='me',
-        methods=('get', 'patch'),
-        permission_classes=(permissions.IsAuthenticated,)
-    )
-    def me(self, request):
-        """Представление авторизованного пользователя."""
-
-        if request.method == 'GET':
-            serializer = CustomUserSerializer(
-                request.user,
+            if current_subscriptions.exists():
+                content = {'error': 'такая подписка уже существует.'}
+                return Response(content, status=status.HTTP_400_BAD_REQUEST)
+            Follow.objects.create(user=request.user, author=author)
+            follows = get_object_or_404(User, id=id)
+            serializer = SubscriptionListSerializer(
+                follows,
                 context={'request': request}
             )
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = self.get_serializer(
-            request.user,
-            data=request.data,
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        if user != author:
+            if current_subscriptions.exists():
+                current_subscriptions.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление тегов."""
-
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
@@ -127,8 +113,6 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление ингредиентов."""
-
     queryset = Ingredient.objects.all()
     serializer_class = IngredientDetailSerializer
     search_fields = ('name',)
@@ -138,8 +122,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    """Представление рецептов."""
-
     queryset = Recipe.objects.all()
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
@@ -150,8 +132,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagePagination
 
     def get_serializer_class(self):
-        """Выбор сериализатора рецептов."""
-
         if self.action in ('list', 'retrive'):
             return RecipeListSerializer
         if self.action in ('create', 'update', 'partial_update'):
@@ -164,8 +144,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def favorite(self, request, pk):
-        """Добавление рецепта в избранное, удаление из избранного."""
-
         return views_utils.favorite(
             self,
             request,
@@ -181,8 +159,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def shopping_cart(self, request, pk):
-        """Добавление рецепта в список покупок, удаление из списка покупок."""
-
         return views_utils.favorite(
             self,
             request,
@@ -198,8 +174,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        """Скачивание txt-файла списка покупок."""
-
         shopping_cart = ShoppingCart.objects.filter(
             user=request.user
         ).values_list('recipe_id', flat=True)
