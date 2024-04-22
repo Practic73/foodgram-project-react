@@ -1,12 +1,11 @@
 from django_filters.rest_framework import (FilterSet, filters,
                                            ModelMultipleChoiceFilter)
-
 from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(FilterSet):
     """
-    Фильтр для ингридиентов.
+    Фильтр для ингредиентов.
     """
     name = filters.CharFilter(
         field_name='name',
