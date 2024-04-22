@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import (AmountIngredient, Ingredient, Tag, Recipe,
+from .models import (Ingredient, Tag, Recipe, RecipeIngredients,
                      ShoppingCart, Favorite)
 
 
 class IngredientInline(admin.TabularInline):
-    model = AmountIngredient
+    model = RecipeIngredients
     extra = 3
     min_num = 1
 

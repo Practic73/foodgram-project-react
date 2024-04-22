@@ -59,9 +59,3 @@ class IngredientFilter(FilterSet):
         model = Ingredient
         fields = ('name',)
 
-
-class TagFilter(FilterSet):
-
-    class Meta:
-        model = Tag
-        fields = ('name', 'slug')

@@ -1,13 +1,12 @@
 import base64
 
-from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    AmountIngredient, Favorite, Ingredient, Recipe,
-    ShoppingCart, Tag)
+    Favorite, Ingredient, Recipe,
+    RecipeIngredients, ShoppingCart, Tag)
 from users.models import Subscribtion, User
 
 
@@ -70,7 +69,7 @@ class IngredientIDAmountSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = AmountIngredient
+        model = RecipeIngredients
         fields = (
             'id',
             'amount'
@@ -90,7 +89,7 @@ class IngredientSerializer(IngredientIDAmountSerializer):
     )
 
     class Meta:
-        model = AmountIngredient
+        model = RecipeIngredients
         fields = (
             'id',
             'name',
@@ -237,11 +236,36 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('author',)
 
-    def create_ingredients(self, ingredient_data, recipe):
-        """Получение ингредиента, создание связи, возврат ингредиента."""
+    def check_ingredients(self, data):
+        validated_items = []
+        existed = []
+        for item in data:
+            ingredient = Ingredient.objects.get(pk=item['id']).name
+            if ingredient in validated_items:
+                existed.append(ingredient)
+            validated_items.append(ingredient)
+        if existed:
+            raise serializers.ValidationError(
+                'Ингредиенты уже добавлены в рецепт'
+            )
 
-        ingredient = get_object_or_404(Ingredient, id=ingredient_data['id'])
-        AmountIngredient.objects.create(
+    def validate(self, data):
+        ingredients = data.get('ingredients')
+        self.check_ingredients(ingredients)
+        data['ingredients'] = ingredients
+        return data
+
+    def create_ingredients(self, ingredient_data, recipe):
+        ingredient = Ingredient.objects.get(pk=ingredient_data['id'])
+        if ingredient_data['amount'] < 1:
+            raise serializers.ValidationError(
+                'Необходимо добавить хотя бы 1 ингредиент.'
+            )
+        if not Ingredient.objects.filter(id=ingredient.id).exists():
+            raise serializers.ValidationError(
+                'Ингредиента не сущетсвует.'
+            )
+        RecipeIngredients.objects.create(
             recipe=recipe,
             ingredient=ingredient,
             amount=ingredient_data['amount']
@@ -284,6 +308,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         instance.image = validated_data.get('image', instance.image)
         instance.tags.set(validated_data.get('tags', instance.tags))
+        RecipeIngredients.objects.filter(recipe=instance).delete()
         for ingredient_data in ingredients:
             ingredient = self.create_ingredients(
                 ingredient_data,
@@ -320,18 +345,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 'Теги должны быть уникальными.'
             )
         return tags
-
-    def validate_ingredients(self, ingredients):
-        ingredints_len = len(ingredients)
-        if ingredints_len == 0:
-            raise serializers.ValidationError(
-                'Необходимо добавить хотя бы 1 ингредиент.'
-            )
-        """ if ingredints_len != len(set(ingredients)):
-            raise serializers.ValidationError(
-                'Ингредиенты должны быть уникальными.'
-            ) """
-        return ingredients
 
 
 class RecipeSerializerShort(serializers.ModelSerializer):

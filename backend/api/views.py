@@ -8,6 +8,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from api.filters import IngredientFilter, RecipeFilter
 from api.paginations import CustomPagePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
@@ -15,10 +16,9 @@ from api.serializers import (
     RecipeListSerializer, RecipeSerializer, SubscriptionListSerializer,
     TagSerializer)
 from api.service import add_recipe, delete_recipe
-from recipes.filters import IngredientFilter, RecipeFilter, TagFilter
 from recipes.models import (
-    AmountIngredient, Favorite, Ingredient, Recipe,
-    ShoppingCart, Tag)
+    Favorite, Ingredient, Recipe,
+    RecipeIngredients, ShoppingCart, Tag)
 from users.models import Subscribtion, User
 
 
@@ -26,7 +26,6 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
-    filterset_class = TagFilter
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -43,13 +42,7 @@ class UserListViewSet(views.UserViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('username', 'email')
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = queryset[:int(limit)]
-        return queryset
+    pagination_class = CustomPagePagination
 
     @action(
         detail=False,
@@ -78,12 +71,7 @@ class UserListViewSet(views.UserViewSet):
     )
     def subscriptions(self, request):
         author = request.user
-        limit = request.query_params.get('limit')
-        if limit:
-            subscriptions = Subscribtion.objects.filter(
-                author=author)[:int(limit)]
-        else:
-            subscriptions = Subscribtion.objects.filter(author=author)
+        subscriptions = Subscribtion.objects.filter(author=author)
         page = self.paginate_queryset(subscriptions)
         serializer = SubscriptionListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
@@ -186,7 +174,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=user
         ).values_list('recipe_id', flat=True)
 
-        ingredients = AmountIngredient.objects.filter(
+        ingredients = RecipeIngredients.objects.filter(
             recipe_id__in=shopping_cart
         ).values(
             'ingredient__name',

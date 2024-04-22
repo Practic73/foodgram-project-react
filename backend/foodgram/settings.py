@@ -12,9 +12,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', default='key')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', default=False) == 'True'
 
-ALLOWED_HOSTS =  ('127.0.0.1', 'localhost')
+ALLOWED_HOSTS =  os.getenv('ALLOWED_HOSTS', 'localhost').split(', ')
 
 INSTALLED_APPS = [
     'api.apps.ApiConfig',
@@ -67,14 +67,13 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'foodgramdb',
-        'USER': 'postgres',
-        'PASSWORD': '123',
-        'HOST': 'localhost',
-        'PORT': 5432,
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -107,10 +107,10 @@ class Recipe(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return f'Блюдо: {self.name} автор: {self.author}'
+        return self.name
 
 
-class AmountIngredient(models.Model):
+class RecipeIngredients(models.Model):
     """Модель количества ингредиентов в рецепте."""
 
     recipe = models.ForeignKey(
@@ -127,7 +127,7 @@ class AmountIngredient(models.Model):
     )
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
-        validators=[MinValueValidator(1, 'Минимальное значение - 1 минута.')]
+        validators=[MinValueValidator(1, 'Минимальное значение - 1.')]
     )
 
     class Meta:
