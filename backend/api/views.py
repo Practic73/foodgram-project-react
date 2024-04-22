@@ -6,6 +6,7 @@ from djoser import views
 
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
@@ -70,11 +71,16 @@ class UserListViewSet(views.UserViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def subscriptions(self, request):
-        author = request.user
-        subscriptions = Subscribtion.objects.filter(author=author)
-        page = self.paginate_queryset(subscriptions)
-        serializer = SubscriptionSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        authors = User.objects.filter(following__user=request.user)
+        paginator = PageNumberPagination()
+        paginator.page_size = 6
+        result_page = paginator.paginate_queryset(authors, request)
+        serializer = SubscriptionSerializer(
+            result_page,
+            many=True,
+            context={'request': request}
+        )
+        return paginator.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
