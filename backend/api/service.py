@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 
-from api.serializers import RecipeSerializerShort
+from api.serializers import RecipeShortSerializer
 from recipes.models import Recipe
 
 
@@ -17,7 +17,7 @@ def add_recipe(self, request, pk, model):
     ).exists():
         return Response(status=HTTPStatus.BAD_REQUEST)
     model.objects.create(recipe=recipe, user=request.user)
-    serializer = RecipeSerializerShort(recipe)
+    serializer = RecipeShortSerializer(recipe)
 
     if recipe is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)

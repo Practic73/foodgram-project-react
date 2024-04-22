@@ -13,7 +13,7 @@ from api.paginations import CustomPagePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CustomUserSerializer, IngredientDetailSerializer, RecipeCreateSerializer,
-    RecipeListSerializer, RecipeSerializer, SubscriptionListSerializer,
+    RecipeListSerializer, RecipeSerializer, SubscriptionSerializer,
     TagSerializer)
 from api.service import add_recipe, delete_recipe
 from recipes.models import (
@@ -73,7 +73,7 @@ class UserListViewSet(views.UserViewSet):
         author = request.user
         subscriptions = Subscribtion.objects.filter(author=author)
         page = self.paginate_queryset(subscriptions)
-        serializer = SubscriptionListSerializer(page, many=True)
+        serializer = SubscriptionSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
     @action(
@@ -95,7 +95,7 @@ class UserListViewSet(views.UserViewSet):
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
             Subscribtion.objects.create(user=request.user, author=author)
             follows = get_object_or_404(User, id=id)
-            serializer = SubscriptionListSerializer(
+            serializer = SubscriptionSerializer(
                 follows,
                 context={'request': request}
             )
